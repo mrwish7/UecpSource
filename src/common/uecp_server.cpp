@@ -54,6 +54,11 @@ size_t UecpServer::popChunk(uint8_t* buf, size_t max_bytes) {
     return n;
 }
 
+void UecpServer::unpopChunk(const uint8_t* buf, size_t n) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    pending_.insert(pending_.begin(), buf, buf + n);
+}
+
 void UecpServer::run() {
     socket_t server_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (server_fd == kInvalidSocket) {

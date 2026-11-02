@@ -54,7 +54,10 @@ int Mp2Encoder::encodeFrame(short pcm[][1152], const uint8_t* ancData, int ancLe
     xpad[payload] = static_cast<uint8_t>(ancLen);
     xpad[payload + 1] = 0xFD;
 
-    return toolame_encode_frame(pcm, xpad, static_cast<size_t>(total),
+    // Only the last ancLen + 2 bytes of xpad are reserved and written:
+    // toolame takes them from the end of the anc_total_bytes_-sized buffer,
+    // and the bits that aren't reserved go to the audio instead.
+    return toolame_encode_frame(pcm, xpad, static_cast<size_t>(ancLen + 2),
                                  outBuf, static_cast<size_t>(outBufSize));
 }
 

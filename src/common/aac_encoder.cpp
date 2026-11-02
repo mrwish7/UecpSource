@@ -62,7 +62,10 @@ void AacEncoder::open() {
 
 int AacEncoder::encodeFrame(const int16_t* pcm, int numSamples,
                              const uint8_t* ancData, int ancLen,
-                             uint8_t* outBuf, int outBufSize) {
+                             uint8_t* outBuf, int outBufSize,
+                             int* ancBytesWritten) {
+    if (ancBytesWritten) *ancBytesWritten = 0;
+
     void* inBufs[2];
     INT   inIds[2];
     INT   inSizes[2];
@@ -111,6 +114,9 @@ int AacEncoder::encodeFrame(const int16_t* pcm, int numSamples,
     AACENC_ERROR err = aacEncEncode(Handle(handle_), &inBufDesc, &outBufDesc, &inArgs, &outArgs);
     if (err != AACENC_OK) return -1;
 
+    // outArgs.numAncBytes is the number of ancillary bytes consumed -- left
+    // at 0 (outArgs is zero-initialized) when none were.
+    if (ancBytesWritten) *ancBytesWritten = static_cast<int>(outArgs.numAncBytes);
     return static_cast<int>(outArgs.numOutBytes);
 }
 

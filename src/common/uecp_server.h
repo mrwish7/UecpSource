@@ -37,6 +37,11 @@ public:
     // Returns the number of bytes written into buf.
     size_t popChunk(uint8_t* buf, size_t max_bytes);
 
+    // Return bytes taken by popChunk() that the encoder didn't actually embed
+    // to the front of the queue, so they go out with the next frame instead
+    // of being lost from the middle of a UECP packet.
+    void unpopChunk(const uint8_t* buf, size_t n);
+
     bool clientConnected() const { return client_connected_.load(); }
     uint64_t packetsReceived() const { return packets_received_.load(); }
 

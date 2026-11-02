@@ -10,14 +10,20 @@ namespace ucs {
 // process-global state -- so only one Mp2Encoder may usefully be open at a
 // time, which matches how this app only ever runs one encoder at once.
 //
-// Ancillary data format (last ancTotalBytes of each frame, unchanged from
-// mp2anc's original):
-//   [0x00 * (payload-N)]  [UECP chunk, N bytes, REVERSED]  [N]  [0xFD]
+// Ancillary data format (last N + 2 bytes of each frame):
+//   [UECP chunk, N bytes, REVERSED]  [N]  [0xFD]
 // A decoder reading backwards from the frame end recovers the UECP bytes in
 // forward order. This reversal (unlike AAC's raw DSE payload) is needed
 // because MP2's ancillary bytes are just raw appended bytes with no
 // self-describing length field of their own -- the trailing [N][0xFD] is
 // what supplies that.
+//
+// Only N + 2 bytes are reserved per frame (2 when no UECP is pending), so
+// the audio gets every byte not needed for ancillary data that frame. The
+// 2-byte [N][0xFD] trailer is always kept: without it, the last bytes of an
+// all-audio frame would occasionally look like a valid trailer to a receiver.
+// Receivers reading backwards via [N] see the same bytes as when the area
+// was a fixed size with leading zero padding.
 class Mp2Encoder
 {
 public:
@@ -28,7 +34,7 @@ public:
     // app_config.h's kDefaultMp2PsyModel).
     Mp2Encoder(int sampleRate, int channels, int bitrateKbps, bool jointStereo, int psyModel);
 
-    // Opens and configures the encoder, reserving ancTotalBytes of
+    // Opens and configures the encoder, allowing up to ancTotalBytes of
     // ancillary space per frame (see app_config.h's kMp2AncTotalBytes).
     // Throws std::runtime_error on failure.
     void open(int ancTotalBytes);

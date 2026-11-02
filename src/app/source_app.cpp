@@ -217,6 +217,7 @@ void SourceApp::encodeThreadFunc() {
         const int16_t* interleaved = reinterpret_cast<const int16_t*>(raw_chunk.data());
 
         int out_bytes;
+        int anc_written = static_cast<int>(anc_len); // MP2 always embeds all it's given
         if (cfg_.codec == Codec::MP2) {
             if (cfg_.channels == 2) {
                 for (int i = 0; i < frame_samples_; i++) {
@@ -233,7 +234,11 @@ void SourceApp::encodeThreadFunc() {
             out_bytes = aac_encoder_->encodeFrame(
                 interleaved, frame_samples_ * cfg_.channels,
                 anc_chunk, static_cast<int>(anc_len),
-                encoded_buf.data(), static_cast<int>(encoded_buf.size()));
+                encoded_buf.data(), static_cast<int>(encoded_buf.size()), &anc_written);
+        }
+        if (anc_written < static_cast<int>(anc_len)) {
+            // Not embedded this frame -- requeue so the UECP stream stays intact.
+            uecp_->unpopChunk(anc_chunk + anc_written, anc_len - static_cast<size_t>(anc_written));
         }
 
         if (out_bytes < 0) {

@@ -1,6 +1,7 @@
 /* Modified for UecpSource, 2026-08-14: DAB mode disabled
  * in toolame_init() and the DAB-only frame-size adjustment removed from
- * toolame_encode_frame(). See MODIFICATIONS.md for details. */
+ * toolame_encode_frame(). 2026-11-02: no all-zero F-PAD written when
+ * xpad_len == 0. See MODIFICATIONS.md for details. */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -543,9 +544,9 @@ int toolame_encode_frame(
         putbits (&bs, xpad_data[header.dab_length - 2], 8);
         putbits (&bs, xpad_data[header.dab_length - 1], 8);
     }
-    else {
-        putbits (&bs, 0, 16); // FPAD is all-zero
-    }
+    /* No all-zero F-PAD when xpad_len == 0: that's DAB-only, and with DAB mode
+     * disabled no bits are reserved for it above -- writing it would overrun
+     * the frame by 2 bytes. */
 
     return bs.output_buffer_written;
 }

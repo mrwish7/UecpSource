@@ -58,12 +58,21 @@ public:
     // embedded as a raw DSE alongside the audio payload; pass ancLen=0 to
     // encode a frame with no ancillary data.
     //
+    // libfdk-aac doesn't always embed what it's given: a frame's ancillary
+    // data is dropped whole if it exceeds the encoder's per-frame limit
+    // (roughly the frame's bit budget less 8 kbps per channel), and isn't
+    // consumed on a call that doesn't reach the encode step. If
+    // ancBytesWritten is non-null it receives how many of the ancLen bytes
+    // were actually embedded (0 on error) -- the rest are the caller's to
+    // resend.
+    //
     // Returns the number of bitstream bytes written to outBuf (may be 0 --
     // the encoder buffers internally before the first frame is emitted), or
     // -1 on error.
     int encodeFrame(const int16_t* pcm, int numSamples,
                      const uint8_t* ancData, int ancLen,
-                     uint8_t* outBuf, int outBufSize);
+                     uint8_t* outBuf, int outBufSize,
+                     int* ancBytesWritten = nullptr);
 
     // Drain remaining buffered frames at end of stream. Call repeatedly;
     // each call may produce 0 or more output bytes. Returns -1 once the

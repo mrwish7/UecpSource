@@ -24,6 +24,10 @@ This project streams plain MPEG-1 Layer II over Icecast, so:
   bitstream buffer's minimum to one whole frame. Now only the X-PAD length the
   caller passes is reserved. UecpSource uses that X-PAD area for its MP2
   ancillary data.
+- 2026-11-02: when the caller passes `xpad_len == 0`, `toolame_encode_frame()`
+  no longer writes the 2 all-zero F-PAD bytes. F-PAD is DAB-only, and since
+  the change above no longer reserves bits for it, writing it made such frames
+  2 bytes too long.
 
 ## `tables.c`, `utils.c`: MSVC portability
 
