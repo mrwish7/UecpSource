@@ -1,0 +1,14 @@
+# Build output (build/, build-msvc/, ...)
+/build*/
+
+# Saved settings: these include the Icecast source password
+*.ini
+
+# Old vendored fdk-aac tree -- now fetched by CMake (cmake/FetchDeps.cmake)
+/fdk-aac-master/
+
+# IDE / editor state
+.vs/
+.vscode/
+*.user
+CMakeUserPresets.json
